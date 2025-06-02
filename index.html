@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>UGEL PUERTO INCA - Sistema de Papeletas</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    margin: 0;
+    padding: 20px;
+  }
+  .container {
+    max-width: 900px;
+    background: #fff;
+    padding: 30px;
+    margin: auto;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  }
+  h1 {
+    text-align: center;
+    color: #2c3e50;
+    font-size: 3rem;
+    margin-bottom: 5px;
+  }
+  h2 {
+    text-align: center;
+    color: #2980b9;
+    font-weight: 600;
+    margin-bottom: 30px;
+  }
+  #dniDisplay {
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.3rem;
+    color: #34495e;
+    margin-bottom: 20px;
+  }
+  label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 6px;
+  }
+  input, select, textarea, button {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    border-radius: 6px;
+    border: 1.5px solid #ccc;
+    box-sizing: border-box;
+  }
+  input[readonly] {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+  }
+  button {
+    margin-top: 15px;
+    background-color: #2980b9;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+  }
+  button:hover {
+    background-color: #1c5980;
+  }
+  #loginSection, #formSection, #reporteSection, #logoutBtn, #imprimirBtn, #editModal {
+    display: none;
+  }
+  .flex-row {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+  .flex-row > * {
+    flex: 1 1 200px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  th, td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+  }
+  th {
+    background-color: #2980b9;
+    color: white;
+  }
+  .btn-small {
+    font-size: 13px;
+    padding: 6px 10px;
+    margin-right: 5px;
+    cursor: pointer;
+    border-radius: 4px;
+    border: none;
+    color: white;
+  }
+  .btn-edit {
+    background-color: #f39c12;
+  }
+  .btn-delete {
+    background-color: #e74c3c;
+  }
+  .btn-print {
+    background-color: #27ae60;
+  }
+  .btn-export {
+    background-color: #2980b9;
+    margin-top: 10px;
+  }
+  /* Modal */
+  #editModal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  #editModalContent {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 550px;
+  }
+  #editModalContent h3 {
+    margin-top: 0;
+  }
+  #editModalContent form > div {
+    margin-bottom: 12px;
+  }
+  #editModalContent button {
+    width: auto;
+    margin-right: 10px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>UGEL PUERTO INCA</h1>
+  <h2>SISTEMA DE PAPELETAS</h2>
+  <div id="dniDisplay"></div>
+
+  <!-- Login -->
+  <section id="loginSection">
+    <label for="dniLogin">Ingrese su DNI para entrar:</label>
+    <input type="text" id="dniLogin" maxlength="8" placeholder="Solo 8 dígitos" autocomplete="off" />
+    <button id="loginBtn">Ingresar</button>
+    <div id="errorMsg" style="color:red; margin-top: 10px;"></div>
+  </section>
+
+  <!-- Formulario -->
+  <section id="formSection">
+    <form id="papeletaForm">
+      <label for="fechaHora">Fecha y hora actual:</label>
+      <input type="text" id="fechaHora" readonly />
+
+      <div class="flex-row">
+        <div>
+          <label for="nombres">Nombres:</label>
+          <input type="text" id="nombres" required autocomplete="off" />
+        </div>
+        <div>
+          <label for="apellidos">Apellidos:</label>
+          <input type="text" id="apellidos" required autocomplete="off" />
+        </div>
+      </div>
+
+      <label for="dniForm">DNI:</label>
+      <input type="text" id="dniForm" readonly />
+
+      <div class="flex-row">
+        <div>
+          <label for="area">Área:</label>
+          <input type="text" id="area" required autocomplete="off" />
+        </div>
+        <div>
+          <label for="dependencia">Dependencia:</label>
+          <input type="text" id="dependencia" required autocomplete="off" />
+        </div>
+      </div>
+
+      <label for="motivo">Motivo de salida:</label>
+      <select id="motivo" required>
+        <option value="">--Seleccione motivo--</option>
+        <option value="Comisión de servicio">Comisión de servicio</option>
+        <option value="Permiso por salud">Permiso por salud</option>
+        <option value="Permiso por horas">Permiso por horas</option>
+        <option value="Onomástico">Onomástico</option>
+        <option value="Notificaciones judiciales">Notificaciones judiciales</option>
+        <option value="Otros">Otros</option>
+      </select>
+
+      <div id="otrosMotivoContainer" style="display:none; margin-top:10px;">
+        <label for="otrosMotivo">Especificar motivo:</label>
+        <input type="text" id="otrosMotivo" autocomplete="off" />
+      </div>
+
+      <label for="detalle" style="margin-top:15px;">Detalle adicional:</label>
+      <textarea id="detalle" placeholder="Opcional..." rows="3"></textarea>
+
+      <label for="jefe" style="margin-top:15px;">Jefe inmediato:</label>
+      <input type="text" id="jefe" required autocomplete="off" />
+
+      <div class="flex-row" style="margin-top:15px;">
+        <div>
+          <label for="fechaInicio">Fecha y hora de salida:</label>
+          <input type="datetime-local" id="fechaInicio" required />
+        </div>
+        <div>
+          <label for="fechaFin">Fecha y hora de retorno:</label>
+          <input type="datetime-local" id="fechaFin" required />
+        </div>
+      </div>
+
+      <button type="button" id="generarBtn">Generar Papeleta</button>
+      <button type="button" id="imprimirBtn" style="display:none; margin-top:10px;">Imprimir mi Papeleta</button>
+    </form>
+  </section>
+
+  <!-- Reporte -->
+  <section id="reporteSection">
+    <h3>Reporte de Papeletas</h3>
+    <button id="exportExcelBtn" class="btn-export">Exportar a Excel</button>
+    <div id="listaPapeletas" style="margin-top:15px;"></div>
+  </section>
+
+  <button id="logoutBtn" style="display:none; margin-top:15px;">Cerrar sesión</button>
+
+  <!-- Modal Edición -->
+  <div id="editModal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle" style="display:none;">
+    <div id="editModalContent">
+      <h3 id="editModalTitle">Editar Papeleta</h3>
+      <form id="editForm">
+        <input type="hidden" id="editId" />
+        <div>
+          <label for="editNombres">Nombres:</label>
+          <input type="text" id="editNombres" required />
+        </div>
+        <div>
+          <label for="editApellidos">Apellidos:</label>
+          <input type="text" id="editApellidos" required />
+        </div>
+        <div>
+          <label for="editArea">Área:</label>
+          <input type="text" id="editArea" required />
+        </div>
+        <div>
+          <label for="editDependencia">Dependencia:</label>
+          <input type="text" id="editDependencia" required />
+        </div>
+        <div>
+          <label for="editMotivo">Motivo:</label>
+          <select id="editMotivo" required>
+            <option value="">--Seleccione motivo--</option>
+            <option value="Comisión de servicio">Comisión de servicio</option>
+            <option value="Permiso por salud">Permiso por salud</option>
+            <option value="Permiso por horas">Permiso por horas</option>
+            <option value="Onomástico">Onomástico</option>
+            <option value="Notificaciones judiciales">Notificaciones judiciales</option>
+            <option value="Otros">Otros</option>
+          </select>
+        </div>
+        <div id="editOtrosMotivoContainer" style="display:none;">
+          <label for="editOtrosMotivo">Especificar motivo:</label>
+          <input type="text" id="editOtrosMotivo" />
+        </div>
+        <div>
+          <label for="editDetalle">Detalle adicional:</label>
+          <textarea id="editDetalle" rows="3"></textarea>
+        </div>
+        <div>
+          <label for="editJefe">Jefe inmediato:</label>
+          <input type="text" id="editJefe" required />
+        </div>
+        <div class="flex-row">
+          <div>
+            <label for="editFechaInicio">Fecha y hora de salida:</label>
+            <input type="datetime-local" id="editFechaInicio" required />
+          </div>
+          <div>
+            <label for="editFechaFin">Fecha y hora de retorno:</label>
+            <input type="datetime-local" id="editFechaFin" required />
+          </div>
+        </div>
+        <div style="margin-top:15px; text-align:right;">
+          <button type="submit">Guardar cambios</button>
+          <button type="button" id="cancelEditBtn">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+(() => {
+  // DOM elements
+  const dniLoginInput = document.getElementById('dniLogin');
+  const loginBtn = document.getElementById('loginBtn');
+  const errorMsg = document.getElementById('errorMsg');
+  const dniDisplay = document.getElementById('dniDisplay');
+  const loginSection = document.getElementById('loginSection');
+  const formSection = document.getElementById('formSection');
+  const reporteSection = document.getElementById('reporteSection');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const exportExcelBtn = document.getElementById('exportExcelBtn');
+  const listaPapeletasDiv = document.getElementById('listaPapeletas');
+
+  // Form inputs
+  const fechaHoraInput = document.getElementById('fechaHora');
+  const nombresInput = document.getElementById('nombres');
+  const apellidosInput = document.getElementById('apellidos');
+  const dniFormInput = document.getElementById('dniForm');
+  const areaInput = document.getElementById('area');
+  const dependenciaInput = document.getElementById('dependencia');
+  const motivoSelect = document.getElementById('motivo');
+  const otrosMotivoContainer = document.getElementById('otrosMotivoContainer');
+  const otrosMotivoInput = document.getElementById('otrosMotivo');
+  const detalleInput = document.getElementById('detalle');
+  const jefeInput = document.getElementById('jefe');
+  const fechaInicioInput = document.getElementById('fechaInicio');
+  const fechaFinInput = document.getElementById('fechaFin');
+  const generarBtn = document.getElementById('generarBtn');
+  const imprimirBtn = document.getElementById('imprimirBtn');
+
+  // Edit modal
+  const editModal = document.getElementById('editModal');
+  const editForm = document.getElementById('editForm');
+  const editIdInput = document.getElementById('editId');
+  const editNombresInput = document.getElementById('editNombres');
+  const editApellidosInput = document.getElementById('editApellidos');
+  const editAreaInput = document.getElementById('editArea');
+  const editDependenciaInput = document.getElementById('editDependencia');
+  const editMotivoSelect = document.getElementById('editMotivo');
+  const editOtrosMotivoContainer = document.getElementById('editOtrosMotivoContainer');
+  const editOtrosMotivoInput = document.getElementById('editOtrosMotivo');
+  const editDetalleInput = document.getElementById('editDetalle');
+  const editJefeInput = document.getElementById('editJefe');
+  const editFechaInicioInput = document.getElementById('editFechaInicio');
+  const editFechaFinInput = document.getElementById('editFechaFin');
+  const cancelEditBtn = document.getElementById('cancelEditBtn');
+
+  // State
+  let usuarioDni = null;
+  let usuarioRol = null; // 'servidor' o 'rrhh'
+  let papeletas = JSON.parse(localStorage.getItem('papeletas')) || [];
+
+  // RRHH users with passwords
+  const RRHH_USERS = [
+    { dni: '12345678', password: 'RRHH2025' }
+  ];
+
+  // Validate DNI format
+  function validarDNI(dni) {
+    return /^\d{8}$/.test(dni);
+  }
+
+  // Update date & time field
+  function actualizarFechaHora() {
+    const ahora = new Date();
+    const fechaStr = ahora.toLocaleDateString('es-PE');
+    const horaStr = ahora.toLocaleTimeString('es-PE', { hour12: false });
+    fechaHoraInput.value = `${fechaStr} ${horaStr}`;
+  }
+
+  // Toggle "Otros" motivo in form
+  motivoSelect.addEventListener('change', () => {
+    if (motivoSelect.value === 'Otros') {
+      otrosMotivoContainer.style.display = 'block';
+      otrosMotivoInput.required = true;
+    } else {
+      otrosMotivoContainer.style.display = 'none';
+      otrosMotivoInput.required = false;
+      otrosMotivoInput.value = '';
+    }
+  });
+  // Toggle "Otros" motivo in edit modal
+  editMotivoSelect.addEventListener('change', () => {
+    if (editMotivoSelect.value === 'Otros') {
+      editOtrosMotivoContainer.style.display = 'block';
+      editOtrosMotivoInput.required = true;
+    } else {
+      editOtrosMotivoContainer.style.display = 'none';
+      editOtrosMotivoInput.required = false;
+      editOtrosMotivoInput.value = '';
+    }
+  });
+
+  // LOGIN
+  loginBtn.addEventListener('click', () => {
+    const dni = dniLoginInput.value.trim();
+    errorMsg.textContent = '';
+
+    if (!validarDNI(dni)) {
+      errorMsg.textContent = 'Ingrese un DNI válido de 8 dígitos.';
+      return;
+    }
+
+    // Check RRHH
+    const rrhhUser = RRHH_USERS.find(u => u.dni === dni);
+    if (rrhhUser) {
+      const password = prompt('Ingrese su contraseña RRHH:');
+      if (password === rrhhUser.password) {
+        usuarioRol = 'rrhh';
+        usuarioDni = dni;
+        iniciarSesion();
+      } else {
+        errorMsg.textContent = 'Contraseña incorrecta.';
+      }
+    } else {
+      // Servidor público
+      usuarioRol = 'servidor';
+      usuarioDni = dni;
+      iniciarSesion();
+    }
+  });
+
+  // Iniciar sesión común
+  function iniciarSesion() {
+    loginSection.style.display = 'none';
+    dniDisplay.textContent = usuarioRol === 'rrhh'
+      ? `Usuario RRHH DNI: ${usuarioDni}`
+      : `Servidor Público DNI: ${usuarioDni}`;
+
+    formSection.style.display = 'block';
+    logoutBtn.style.display = 'block';
+    imprimirBtn.style.display = 'none';
+
+    if (usuarioRol === 'rrhh') {
+      reporteSection.style.display = 'block';
+      listarPapeletas();
+    } else {
+      reporteSection.style.display = 'none';
+    }
+
+    dniFormInput.value = usuarioDni;
+    dniFormInput.readOnly = true;
+    limpiarFormulario();
+    actualizarFechaHora();
+  }
+
+  // Limpiar formulario
+  function limpiarFormulario() {
+    nombresInput.value = '';
+    apellidosInput.value = '';
+    areaInput.value = '';
+    dependenciaInput.value = '';
+    motivoSelect.value = '';
+    otrosMotivoContainer.style.display = 'none';
+    otrosMotivoInput.value = '';
+    detalleInput.value = '';
+    jefeInput.value = '';
+    fechaInicioInput.value = '';
+    fechaFinInput.value = '';
+    imprimirBtn.style.display = 'none';
+  }
+
+  // Generar papeleta
+  generarBtn.addEventListener('click', () => {
+    if (!nombresInput.value.trim() || !apellidosInput.value.trim() ||
+        !areaInput.value.trim() || !dependenciaInput.value.trim() ||
+        !motivoSelect.value || !jefeInput.value.trim() ||
+        !fechaInicioInput.value || !fechaFinInput.value) {
+      alert('Complete todos los campos obligatorios.');
+      return;
+    }
+    if (motivoSelect.value === 'Otros' && !otrosMotivoInput.value.trim()) {
+      alert('Por favor especifique el motivo.');
+      return;
+    }
+    if (new Date(fechaInicioInput.value) >= new Date(fechaFinInput.value)) {
+      alert('La fecha y hora de retorno debe ser posterior a la de salida.');
+      return;
+    }
+
+    // Crear objeto papeleta
+    const papeleta = {
+      id: Date.now(),
+      nombres: nombresInput.value.trim(),
+      apellidos: apellidosInput.value.trim(),
+      dni: usuarioDni,
+      area: areaInput.value.trim(),
+      dependencia: dependenciaInput.value.trim(),
+      motivo: motivoSelect.value === 'Otros' ? `Otros: ${otrosMotivoInput.value.trim()}` : motivoSelect.value,
+      detalle: detalleInput.value.trim(),
+      jefe: jefeInput.value.trim(),
+      fechaInicio: fechaInicioInput.value,
+      fechaFin: fechaFinInput.value,
+      fechaRegistro: new Date().toISOString(),
+      aprobado: false,
+    };
+
+    papeletas.push(papeleta);
+    guardarPapeletas();
+    alert('Papeleta generada con éxito.');
+    limpiarFormulario();
+
+    if (usuarioRol === 'rrhh') {
+      listarPapeletas();
+    } else {
+      imprimirBtn.style.display = 'inline-block';
+    }
+  });
+
+  // Guardar papeletas en localStorage
+  function guardarPapeletas() {
+    localStorage.setItem('papeletas', JSON.stringify(papeletas));
+  }
+
+  // Listar papeletas en reporte
+  function listarPapeletas() {
+    listaPapeletasDiv.innerHTML = '';
+    let listaFiltrada = usuarioRol === 'rrhh' ? papeletas : papeletas.filter(p => p.dni === usuarioDni);
+
+    if (listaFiltrada.length === 0) {
+      listaPapeletasDiv.innerHTML = '<p>No hay papeletas registradas.</p>';
+      return;
+    }
+
+    const table = document.createElement('table');
+    const thead = document.createElement('thead');
+    thead.innerHTML = `<tr>
+      <th>ID</th><th>Nombre</th><th>DNI</th><th>Área/Dependencia</th><th>Motivo</th><th>Salida</th><th>Retorno</th><th>Estado</th><th>Acciones</th>
+    </tr>`;
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+
+    listaFiltrada.forEach(p => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${p.id}</td>
+        <td>${p.nombres} ${p.apellidos}</td>
+        <td>${p.dni}</td>
+        <td>${p.area} / ${p.dependencia}</td>
+        <td>${p.motivo}</td>
+        <td>${new Date(p.fechaInicio).toLocaleString()}</td>
+        <td>${new Date(p.fechaFin).toLocaleString()}</td>
+        <td>${p.aprobado ? '✅ Aprobado' : '⏳ Pendiente'}</td>
+        <td>
+          ${usuarioRol === 'rrhh' ? `
+            <button class="btn-small btn-edit" data-id="${p.id}">Editar</button>
+            <button class="btn-small btn-delete" data-id="${p.id}">Eliminar</button>
+            <button class="btn-small btn-print" data-id="${p.id}">Imprimir</button>
+            <button class="btn-small btn-approve" data-id="${p.id}">${p.aprobado ? 'Quitar visto bueno' : 'Aprobar'}</button>
+          ` : `
+            <button class="btn-small btn-print" data-id="${p.id}">Imprimir</button>
+          `}
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    listaPapeletasDiv.appendChild(table);
+  }
+
+  // Event delegation para acciones en reporte
+  listaPapeletasDiv.addEventListener('click', (e) => {
+    if (e.target.classList.contains('btn-edit')) {
+      abrirModalEdicion(e.target.dataset.id);
+    }
+    if (e.target.classList.contains('btn-delete')) {
+      eliminarPapeleta(e.target.dataset.id);
+    }
+    if (e.target.classList.contains('btn-print')) {
+      imprimirPapeleta(e.target.dataset.id);
+    }
+    if (e.target.classList.contains('btn-approve')) {
+      toggleAprobado(e.target.dataset.id);
+    }
+  });
+
+  // Abrir modal edición
+  function abrirModalEdicion(id) {
+    const p = papeletas.find(p => p.id == id);
+    if (!p) return;
+
+    editIdInput.value = p.id;
+    editNombresInput.value = p.nombres;
+    editApellidosInput.value = p.apellidos;
+    editAreaInput.value = p.area;
+    editDependenciaInput.value = p.dependencia;
+    editMotivoSelect.value = p.motivo.startsWith('Otros:') ? 'Otros' : p.motivo;
+    if (editMotivoSelect.value === 'Otros') {
+      editOtrosMotivoContainer.style.display = 'block';
+      editOtrosMotivoInput.value = p.motivo.replace('Otros: ', '');
+    } else {
+      editOtrosMotivoContainer.style.display = 'none';
+      editOtrosMotivoInput.value = '';
+    }
+    editDetalleInput.value = p.detalle;
+    editJefeInput.value = p.jefe;
+    editFechaInicioInput.value = p.fechaInicio;
+    editFechaFinInput.value = p.fechaFin;
+
+    editModal.style.display = 'flex';
+  }
+
+  // Guardar cambios en edición
+  editForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const id = editIdInput.value;
+    const idx = papeletas.findIndex(p => p.id == id);
+    if (idx === -1) return alert('Papeleta no encontrada.');
+
+    if (editMotivoSelect.value === 'Otros' && !editOtrosMotivoInput.value.trim()) {
+      alert('Especifique motivo en "Otros".');
+      return;
+    }
+    if (new Date(editFechaInicioInput.value) >= new Date(editFechaFinInput.value)) {
+      alert('La fecha y hora de retorno deben ser posteriores a la salida.');
+      return;
+    }
+
+    papeletas[idx].nombres = editNombresInput.value.trim();
+    papeletas[idx].apellidos = editApellidosInput.value.trim();
+    papeletas[idx].area = editAreaInput.value.trim();
+    papeletas[idx].dependencia = editDependenciaInput.value.trim();
+    papeletas[idx].motivo = editMotivoSelect.value === 'Otros' ? `Otros: ${editOtrosMotivoInput.value.trim()}` : editMotivoSelect.value;
+    papeletas[idx].detalle = editDetalleInput.value.trim();
+    papeletas[idx].jefe = editJefeInput.value.trim();
+    papeletas[idx].fechaInicio = editFechaInicioInput.value;
+    papeletas[idx].fechaFin = editFechaFinInput.value;
+
+    guardarPapeletas();
+    listarPapeletas();
+    cerrarModalEdicion();
+  });
+
+  cancelEditBtn.addEventListener('click', cerrarModalEdicion);
+  function cerrarModalEdicion() {
+    editModal.style.display = 'none';
+  }
+
+  // Eliminar papeleta
+  function eliminarPapeleta(id) {
+    if (confirm('¿Seguro desea eliminar esta papeleta?')) {
+      papeletas = papeletas.filter(p => p.id != id);
+      guardarPapeletas();
+      listarPapeletas();
+    }
+  }
+
+  // Imprimir papeleta (abre ventana nueva)
+  function imprimirPapeleta(id) {
+    const p = papeletas.find(p => p.id == id);
+    if (!p) return alert('Papeleta no encontrada.');
+
+    const contenido = `
+      <html>
+      <head><title>Papeleta ${p.id}</title></head>
+      <body>
+        <h1>UGEL PUERTO INCA</h1>
+        <h2>Sistema de Papeletas</h2>
+        <hr>
+        <p><strong>Nombre:</strong> ${p.nombres} ${p.apellidos}</p>
+        <p><strong>DNI:</strong> ${p.dni}</p>
+        <p><strong>Área/Dependencia:</strong> ${p.area} / ${p.dependencia}</p>
+        <p><strong>Motivo:</strong> ${p.motivo}</p>
+        <p><strong>Detalle:</strong> ${p.detalle || 'Ninguno'}</p>
+        <p><strong>Jefe inmediato:</strong> ${p.jefe}</p>
+        <p><strong>Salida:</strong> ${new Date(p.fechaInicio).toLocaleString()}</p>
+        <p><strong>Retorno:</strong> ${new Date(p.fechaFin).toLocaleString()}</p>
+        <p><strong>Estado:</strong> ${p.aprobado ? '✅ Aprobado' : '⏳ Pendiente'}</p>
+        <hr>
+        <p>Generado el: ${new Date(p.fechaRegistro).toLocaleString()}</p>
+        <script>window.onload = () => {window.print(); setTimeout(() => window.close(), 100);};<\/script>
+      </body>
+      </html>
+    `;
+
+    const win = window.open('', '_blank');
+    win.document.write(contenido);
+    win.document.close();
+  }
+
+  // Aprobar / quitar aprobación
+  function toggleAprobado(id) {
+    const idx = papeletas.findIndex(p => p.id == id);
+    if (idx === -1) return;
+    papeletas[idx].aprobado = !papeletas[idx].aprobado;
+    guardarPapeletas();
+    listarPapeletas();
+  }
+
+  // Exportar a Excel
+  exportExcelBtn.addEventListener('click', () => {
+    if (!papeletas.length) {
+      alert('No hay papeletas para exportar.');
+      return;
+    }
+    const wb = XLSX.utils.book_new();
+    const wsData = [
+      ['ID', 'Nombres', 'Apellidos', 'DNI', 'Área', 'Dependencia', 'Motivo', 'Detalle', 'Jefe', 'Salida', 'Retorno', 'Estado', 'Fecha Registro']
+    ];
+    papeletas.forEach(p => {
+      wsData.push([
+        p.id, p.nombres, p.apellidos, p.dni, p.area, p.dependencia,
+        p.motivo, p.detalle, p.jefe,
+        new Date(p.fechaInicio).toLocaleString(),
+        new Date(p.fechaFin).toLocaleString(),
+        p.aprobado ? 'Aprobado' : 'Pendiente',
+        new Date(p.fechaRegistro).toLocaleString()
+      ]);
+    });
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    XLSX.utils.book_append_sheet(wb, ws, 'Papeletas');
+    XLSX.writeFile(wb, 'Reporte_Papeletas_UGEL.xlsx');
+  });
+
+  // Logout
+  logoutBtn.addEventListener('click', () => {
+    usuarioDni = null;
+    usuarioRol = null;
+    papeletas = JSON.parse(localStorage.getItem('papeletas')) || [];
+
+    dniDisplay.textContent = '';
+    loginSection.style.display = 'block';
+    formSection.style.display = 'none';
+    reporteSection.style.display = 'none';
+    logoutBtn.style.display = 'none';
+    errorMsg.textContent = '';
+    dniLoginInput.value = '';
+  });
+
+  // Init
+  loginSection.style.display = 'block';
+  actualizarFechaHora();
+
+  // Actualizar hora cada 30 segundos
+  setInterval(actualizarFechaHora, 30000);
+
+})();
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</body>
+</html>
